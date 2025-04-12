@@ -14,40 +14,34 @@ export default function UploadSound() {
 
   const navigate = useNavigate()
 
-  function handleUpload() {
+  async function handleUpload() {
     if (!soundName || !description || !image || !audio) {
       alert("Please fill in all fields")
       return
     }
 
-    
-    const reader1 = new FileReader()
-    const reader2 = new FileReader()
+    const formData = new FormData()
+    formData.append("user_id", "test_user") // You can replace with dynamic user later
+    formData.append("sound_name", soundName)
+    formData.append("sound", audio)
 
-    reader1.onload = (e) => {
-      const imageUrl = e.target?.result as string
+    try {
+      const response = await fetch("http://localhost:8000/sound_board/sounds", {
+        method: "POST",
+        body: formData,
+      })
 
-      reader2.onload = (e2) => {
-        const audioUrl = e2.target?.result as string
-
-        const uploadedSound = {
-          id: Date.now(),
-          title: soundName,
-          description,
-          image: imageUrl,
-          audioUrl,
-        }
-
-        const existing = JSON.parse(localStorage.getItem("soundList") || "[]")
-        localStorage.setItem("soundList", JSON.stringify([...existing, uploadedSound]))
-
-        navigate("/Home") 
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Upload failed")
       }
 
-      reader2.readAsDataURL(audio)
+      const result = await response.json()
+      console.log("Upload success:", result)
+      navigate("/home")
+    } catch (error) {
+      alert("Error: " + error)
     }
-
-    reader1.readAsDataURL(image)
   }
 
   return (

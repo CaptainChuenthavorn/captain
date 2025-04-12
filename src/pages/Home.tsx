@@ -24,10 +24,19 @@ export default function Home() {
     const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
 
     useEffect(() => {
-    const stored = localStorage.getItem("soundList")
-    if (stored) {
-      setSoundList(JSON.parse(stored))
-    }
+      fetch("http://localhost:8000/sound_board/sounds/all")
+      .then((res) => res.json())
+      .then((data) => {
+        const transformed = data.map((item: any) => ({
+          id: item.id,
+          title: item.sound_name,
+          description: `Uploaded on ${new Date(item.upload_date).toLocaleDateString()}`,
+          image: "/vite.svg", // You can replace this with an actual image path if needed
+          audioUrl: `http://localhost:8000/sound_board/sounds/${item.id}`,
+        }))
+        setSoundList(transformed)
+      })
+      .catch(console.error)
   }, [])
 
   function playSound(url: string) {
